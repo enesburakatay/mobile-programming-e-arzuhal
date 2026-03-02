@@ -21,6 +21,8 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import { colors, fonts } from './src/styles/tokens';
 import authService from './src/services/auth.service';
+import { setOnUnauthorized } from './src/services/api.service';
+import DisclaimerModal, { checkDisclaimerAccepted } from './src/components/DisclaimerModal';
 
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
@@ -31,6 +33,7 @@ import ContractDetailScreen from './src/screens/ContractDetailScreen';
 import ApprovalsScreen from './src/screens/ApprovalsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import VerificationScreen from './src/screens/VerificationScreen';
+import ChatbotScreen from './src/screens/ChatbotScreen';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -79,6 +82,9 @@ function MainTabs() {
             case 'Approvals':
               iconName = focused ? 'checkmark-done-circle' : 'checkmark-done-circle-outline';
               break;
+            case 'Chatbot':
+              iconName = focused ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline';
+              break;
             case 'Settings':
               iconName = focused ? 'settings' : 'settings-outline';
               break;
@@ -122,6 +128,11 @@ function MainTabs() {
         options={{ tabBarLabel: 'Onaylar' }}
       />
       <Tab.Screen
+        name="Chatbot"
+        component={ChatbotScreen}
+        options={{ tabBarLabel: 'Asistan' }}
+      />
+      <Tab.Screen
         name="Settings"
         component={SettingsStackScreen}
         options={{ tabBarLabel: 'Ayarlar' }}
@@ -132,6 +143,7 @@ function MainTabs() {
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const [fontsLoaded] = useFonts({
     PlayfairDisplay_600SemiBold,
@@ -143,12 +155,18 @@ export default function App() {
   });
 
   useEffect(() => {
+    // 401 aldığında token temizlenmiş olur; buradan da state'i false'a çekeriz → Login ekranı
+    setOnUnauthorized(() => setIsAuthenticated(false));
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
     const authenticated = await authService.isAuthenticated();
     setIsAuthenticated(authenticated);
+    if (authenticated) {
+      const accepted = await checkDisclaimerAccepted();
+      if (!accepted) setShowDisclaimer(true);
+    }
   };
 
   const onLayoutRootView = useCallback(async () => {
@@ -169,6 +187,10 @@ export default function App() {
     <SafeAreaProvider>
       <View style={styles.container} onLayout={onLayoutRootView}>
         <StatusBar style="dark" />
+        <DisclaimerModal
+          visible={showDisclaimer}
+          onAccepted={() => setShowDisclaimer(false)}
+        />
         <NavigationContainer
           onStateChange={async () => {
             const auth = await authService.isAuthenticated();
