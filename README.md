@@ -1,7 +1,7 @@
-# e-Arzuhal – Mobile Frontend
+# e-Arzuhal – Smart Contract Management Platform
 
-**Mobile Programming Course Project**  
-React Native / Expo Mobile Application
+**CSE308 - Mobile Programming Course Project**  
+Akdeniz University – 2024/2025 Spring Semester
 
 
 ## Team Members
@@ -10,37 +10,38 @@ React Native / Expo Mobile Application
 - **20210808051 – Burak Dere**
 
 
-## Technology Stack
+## Project Overview
+
+e-Arzuhal is a full-stack mobile application for creating, managing, and approving legal contracts. It features NLP-based contract analysis, identity verification via NFC (Turkish ID cards), a legal chatbot, and PDF generation.
 
 | Layer | Technology |
 |-------|------------|
-| Framework | React Native 0.81.5 |
-| Platform | Expo SDK 54 (managed workflow) |
-| Navigation | React Navigation 7 (Stack + Bottom Tabs) |
-| Fonts | DM Sans + Playfair Display (Google Fonts) |
-| Secure Storage | expo-secure-store |
+| **Mobile App** | React Native 0.81.5 / Expo SDK 54 |
+| **Backend** | Node.js + Express |
+| **Database** | PostgreSQL (managed via pgAdmin) |
+| **Auth** | JWT (JSON Web Tokens) + bcrypt |
 
 
-## Project Structure
+## Repository Structure
 
-```bash
-frontend-mobile/
-├── App.js
-├── package.json
-├── app.json
-├── src/
-│   ├── components/
+```
+mobile-programming-e-arzuhal/
+├── App.js                       # Mobile app entry point
+├── package.json                 # Mobile app dependencies
+├── app.json                     # Expo configuration
+├── src/                         # ── Mobile Application ──
+│   ├── components/              # Reusable UI components
+│   │   ├── Badge.js
 │   │   ├── Button.js
 │   │   ├── Card.js
-│   │   ├── Badge.js
+│   │   ├── DisclaimerModal.js
 │   │   ├── Header.js
 │   │   ├── Input.js
 │   │   ├── ProgressBar.js
 │   │   ├── ScreenWrapper.js
 │   │   ├── StepIndicator.js
-│   │   ├── TextArea.js
-│   │   └── DisclaimerModal.js
-│   ├── screens/
+│   │   └── TextArea.js
+│   ├── screens/                 # Application screens
 │   │   ├── LoginScreen.js
 │   │   ├── RegisterScreen.js
 │   │   ├── DashboardScreen.js
@@ -48,45 +49,106 @@ frontend-mobile/
 │   │   ├── ContractsScreen.js
 │   │   ├── ContractDetailScreen.js
 │   │   ├── ApprovalsScreen.js
+│   │   ├── ChatbotScreen.js
+│   │   ├── VerificationScreen.js
 │   │   └── SettingsScreen.js
-│   ├── services/
+│   ├── services/                # API service layer
 │   │   ├── api.service.js
 │   │   ├── auth.service.js
-│   │   └── contract.service.js
+│   │   ├── contract.service.js
+│   │   ├── chatbot.service.js
+│   │   └── verification.service.js
+│   ├── hooks/
+│   │   └── useVoiceInput.js
+│   ├── utils/
+│   │   ├── mrz-parser.js
+│   │   └── nfc-mrtd.js
 │   ├── config/
 │   │   └── api.config.js
 │   └── styles/
 │       └── tokens.js
-└── assets/
+│
+├── main-server/                 # ── Backend Server ──
+│   ├── server.js                # Express entry point (port 8080)
+│   ├── db.js                    # PostgreSQL connection & schema
+│   ├── package.json             # Server dependencies
+│   ├── middleware/
+│   │   └── auth.js              # JWT authentication middleware
+│   └── routes/
+│       ├── auth.js              # Registration & login
+│       ├── contracts.js         # Contract CRUD + workflow
+│       ├── users.js             # Profile & TC Kimlik lookup
+│       ├── verification.js      # Identity verification
+│       ├── chat.js              # Chatbot (mock)
+│       ├── analysis.js          # NLP analysis (mock)
+│       └── disclaimer.js        # Legal disclaimer
+│
+└── assets/                      # App icons & splash screen
 ```
 
-## Installation and Setup
-To run the project locally:
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL 14+ (pgAdmin recommended)
+- Expo Go app on your phone (for testing)
+
+### 1. Database Setup
+
+1. Open **pgAdmin** and connect to your PostgreSQL server
+2. Create a new database named **`mobile_programming`**
+3. No manual table creation needed — tables are auto-created on server startup
+
+Connection details (configured in `main-server/db.js`):
+
+| Setting  | Value              |
+|----------|--------------------|
+| Host     | localhost          |
+| Port     | 5432               |
+| Database | mobile_programming |
+| User     | postgres           |
+| Password | EnesPassword       |
+
+### 2. Start the Backend Server
+
 ```bash
-cd mobile-programming-e-arzuhal
+cd main-server
+npm install
+npm start
+```
+
+Server runs at `http://localhost:8080`. You should see:
+
+```
+  e-Arzuhal Main Server
+  ─────────────────────
+  Port:     8080
+  Database: PostgreSQL (mobile_programming)
+```
+
+### 3. Start the Mobile App
+
+```bash
+# In the project root (not main-server)
 npm install
 npx expo start
 ```
-### Platform-Specific Commands
 
-- **Android**
+Scan the QR code with Expo Go. The app auto-detects the server IP.
+
+#### Platform-Specific Commands
+
 ```bash
-npx expo start --android
+npx expo start --android    # Android emulator
+npx expo start --ios        # iOS simulator (macOS only)
 ```
-
-- **iOS**
-```bash
-npx expo start --ios
-```
-*(Requires macOS and Xcode)*
-
-- **Expo Go**  
-The application can be tested by scanning the generated QR code.
 
 
 ## Navigation Architecture
 
-```bash
+```
 Stack.Navigator
 ├── Login
 ├── Register
@@ -97,75 +159,137 @@ Stack.Navigator
     │   ├── ContractsList
     │   └── ContractDetail
     ├── Approvals
-    └── Settings
+    ├── Chatbot
+    └── Settings → SettingsStack
+        ├── SettingsHome
+        └── Verification
 ```
 
-The application uses a combination of **Stack Navigation** and **Bottom Tab Navigation** to separate authentication flows from the main application interface.
+
+## API Endpoints
+
+### Authentication (public)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register a new user |
+| POST | `/api/auth/login` | Login with username/email + password |
+
+### Contracts (requires JWT)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/contracts` | List user's contracts |
+| POST | `/api/contracts` | Create a new contract |
+| GET | `/api/contracts/stats` | Dashboard statistics |
+| GET | `/api/contracts/pending-approval` | Contracts awaiting approval |
+| GET | `/api/contracts/:id` | Get single contract detail |
+| PUT | `/api/contracts/:id` | Update a contract |
+| DELETE | `/api/contracts/:id` | Delete a contract |
+| POST | `/api/contracts/:id/finalize` | Send to approval |
+| POST | `/api/contracts/:id/approve` | Approve a contract |
+| POST | `/api/contracts/:id/reject` | Reject a contract |
+| GET | `/api/contracts/:id/pdf` | Download contract as PDF |
+
+### Users (requires JWT)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/users/lookup?tcKimlik=` | Lookup user by TC Kimlik No |
+| PUT | `/api/users/me` | Update profile |
+| PUT | `/api/users/me/password` | Change password |
+
+### Analysis (requires JWT — mock NLP)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/analysis/analyze` | Analyze contract text |
+
+### Chat (requires JWT — mock responses)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/chat` | Send chatbot message |
+
+### Verification (requires JWT)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/verification/status` | Get verification status |
+| POST | `/api/verification/identity` | Submit identity verification |
+
+### Disclaimer (requires JWT)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/disclaimer/status` | Check disclaimer acceptance |
+| POST | `/api/disclaimer/accept` | Accept legal disclaimer |
+
+### Health
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/health` | Server health check |
 
 
-## ScreenWrapper Component Usage
+## Database Schema
 
-The `ScreenWrapper` component ensures consistent safe area handling and background styling across all screens.
+### users
+| Column | Type | Description |
+|--------|------|-------------|
+| id | TEXT (UUID) | Primary key |
+| username | VARCHAR(100) | Unique username |
+| email | VARCHAR(255) | Unique email |
+| password_hash | TEXT | bcrypt hashed password |
+| first_name | VARCHAR(100) | First name |
+| last_name | VARCHAR(100) | Last name |
+| tc_kimlik | VARCHAR(11) | Turkish national ID number |
+| verified | BOOLEAN | Identity verification status |
+| verify_method | VARCHAR(50) | NFC / MRZ / MANUAL |
+| disclaimer_accepted | BOOLEAN | Legal disclaimer accepted |
+| created_at | TIMESTAMP | Creation timestamp |
+| updated_at | TIMESTAMP | Last update timestamp |
 
-Example usage:
-
-```javascript
-return (
-  <ScreenWrapper>
-    <Header />
-    <ScrollView>
-      {/* Content */}
-    </ScrollView>
-  </ScreenWrapper>
-);
-```
-
-This approach maintains layout consistency and improves UI maintainability.
-
-
-## Backend Integration
-
-The base server URL is configured in:
-
-```
-src/config/api.config.js
-```
-
-Example API usage:
-
-```javascript
-await api.post('/api/contracts', contractData);
-await api.get('/api/contracts');
-```
-
-The application communicates with the backend using a centralized API service that manages authentication tokens and HTTP requests.
+### contracts
+| Column | Type | Description |
+|--------|------|-------------|
+| id | TEXT (UUID) | Primary key |
+| owner_id | TEXT | FK → users.id |
+| title | TEXT | Contract title |
+| type | VARCHAR(50) | SALES, RENTAL, SERVICE, EMPLOYMENT, NDA, OTHER |
+| content | TEXT | Full contract text |
+| amount | VARCHAR(100) | Contract monetary amount |
+| status | VARCHAR(50) | DRAFT, PENDING_APPROVAL, APPROVED, REJECTED |
+| counterparty_name | VARCHAR(200) | Other party's name |
+| counterparty_role | VARCHAR(200) | Other party's role |
+| counterparty_tc_kimlik | VARCHAR(11) | Other party's TC Kimlik No |
+| counterparty_user_id | TEXT | Other party's user ID (if registered) |
+| created_at | TIMESTAMP | Creation timestamp |
+| updated_at | TIMESTAMP | Last update timestamp |
 
 
 ## Application Features
 
-- User registration and authentication (JWT-based authentication)
-- Contract creation
-- Contract listing
-- Contract detail viewing
-- PDF download functionality
-- Approval workflow management
-- Legal disclaimer verification
-- Automatic logout upon token expiration (401 handler)
+- **User Authentication** — Registration and login with JWT tokens and bcrypt-hashed passwords
+- **Contract CRUD** — Create, read, update, and delete contracts stored in PostgreSQL
+- **Contract Workflow** — Draft → Pending Approval → Approved / Rejected lifecycle
+- **NLP Analysis** — Automatic contract type detection and entity extraction (mock)
+- **GraphRAG Suggestions** — Recommended missing clauses based on contract type (mock)
+- **PDF Generation** — Server-side PDF creation and download
+- **Identity Verification** — NFC-based Turkish ID card reading (ICAO 9303 MRTD)
+- **Chatbot Assistant** — Legal Q&A chatbot with conversation history (mock)
+- **Voice Input** — Speech-to-text for contract content and chat (Turkish)
+- **Dashboard** — Real-time contract statistics from database
+- **Profile Management** — Edit profile and change password
+- **Legal Disclaimer** — Required acceptance before contract finalization
+- **Session Management** — Automatic logout on 401 (token expiry)
 
 
-## Legal Disclaimer Mechanism
+## Authentication Flow
 
-After successful authentication, the system verifies whether the user has accepted the legal disclaimer.
+1. User registers or logs in → server returns JWT `accessToken` + `userInfo`
+2. Token stored in `expo-secure-store` (encrypted device storage)
+3. Every API request includes `Authorization: Bearer <token>` header
+4. If any response returns 401 → token deleted, user redirected to login
 
-The contract finalization process cannot be completed unless the disclaimer has been accepted. This mechanism ensures legal awareness and compliance within the system.
 
+## Contract Lifecycle
 
-## Automatic Logout on Session Expiration
+```
+DRAFT  ──(finalize)──►  PENDING_APPROVAL  ──(approve)──►  APPROVED
+                                           ──(reject)───►  REJECTED
+```
 
-If any API request returns a `401 Unauthorized` response:
-
-1. The authentication token is removed from SecureStore.
-2. The authentication state is reset.
-3. The user is redirected to the Login screen.
-
-This ensures secure session management and prevents unauthorized access using expired tokens.
+Only the contract owner can finalize. Identity verification is required before finalize/approve/reject actions.
