@@ -1,0 +1,19 @@
+{
+  "name": "e-arzuhal-main-server",
+  "version": "1.0.0",
+  "description": "Backend server for e-Arzuhal mobile application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.0",
+    "pdfkit": "^0.15.0",
+    "uuid": "^10.0.0"
+  }
+}
